@@ -1,7 +1,6 @@
 'use client';
 import Silueta from '../../../../public/images/silueta.png';
 import { Section } from '../Section/Section';
-import { Figures } from './Figures';
 import { Shapes } from './Shapes';
 import { motion, useInView } from 'framer-motion';
 import Image from 'next/image';
@@ -51,28 +50,23 @@ export const PasoUno = () => {
                 width={420}
               />
 
-              <div className="absolute -right-24 top-8">
+              <div className="absolute -right-32">
                 <Shapes
-                  height="367.416"
-                  width="653.184"
+                  height="453.6"
+                  width="806.4"
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-4">
-              <p className="text-2xl max-w-sm font-varela">
-                Si estás{' '}
-                <span className="text-section-two-text">hasta la madre </span>
-                de estar mal, es momento de sentirte y verte bien.
-                <br />
-                <br />
-                Aprovecha cada momento para ser feliz contigo y{' '}
-                <span className="text-section-two-text">no me jodas</span> con
-                que no se puede. INTÉNTALO.
-              </p>
-              <div>
-                <Figures width={320} />
-              </div>
-            </div>
+            <p className="text-2xl max-w-sm font-varela">
+              Si estás{' '}
+              <span className="text-section-two-text">hasta la madre </span>
+              de estar mal, es momento de sentirte y verte bien.
+              <br />
+              <br />
+              Aprovecha cada momento para ser feliz contigo y{' '}
+              <span className="text-section-two-text">no me jodas</span> con que
+              no se puede. INTÉNTALO.
+            </p>
           </div>
         </div>
       </div>

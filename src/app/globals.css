@@ -72,21 +72,16 @@ font-display:auto;font-style:italic;font-weight:600;font-stretch:normal;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --section-one-top-rgb: 21, 17, 34;
-  --section-one-bottom-rgb: 217, 165, 217;
-  --section-two-bottom-rgb: 246, 210, 178;
+  --section-one-top-rgb: rgba(21, 17, 34);
+  --section-one-bottom-rgb: rgb(217, 165, 217);
+  --section-two-bottom-rgb: rgb(246, 210, 178);
+  --section-three-bottom-rgb: rgb(232, 186, 197);
   --section-two-text-color-rgb: 235, 116, 51;
-  --section-three-text-color-rgb: 227, 66, 56;
   --section-three-text-color-rgb: 233, 69, 59;
 }
 
 body {
   font-family: "chantal", sans-serif;
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: white;
 }

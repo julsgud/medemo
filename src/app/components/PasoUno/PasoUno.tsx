@@ -26,7 +26,6 @@ export const PasoUno = () => {
           ease: 'easeInOut',
         },
       }}
-      className="bg-[rgb(var(--section-one-bottom-rgb))] bg-gradient-to-b from-[rgb(var(--section-one-bottom-rgb))] to-[rgb(var(--section-two-bottom-rgb))]"
       ref={ref}
       style={{
         backgroundRepeat: 'no-repeat',

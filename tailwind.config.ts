@@ -16,6 +16,7 @@ const tailwindConfig: Config = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       colors: {
+        'section-three-text': 'rgb(var(--section-three-text-color-rgb))',
         'section-two-text': 'rgb(var(--section-two-text-color-rgb))',
       },
       fontFamily: {

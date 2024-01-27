@@ -1,5 +1,5 @@
 'use client';
-import Silueta from '../../../../public/images/silueta.png';
+import Silueta from '../../../../public/images/silueta.webp';
 import { Section } from '../Section/Section';
 import { Figures } from './Figures';
 import { Shapes } from './Shapes';

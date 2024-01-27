@@ -8,7 +8,6 @@ type AnimatedTextProps = {
     visible: Variant;
   };
   readonly className?: string;
-  readonly el?: keyof JSX.IntrinsicElements;
   readonly onAnimationComplete?: () => void;
   readonly once?: boolean;
   readonly repeatDelay?: number;
@@ -41,7 +40,6 @@ const defaultVariants = {
 export const AnimatedText = ({
   animation = defaultAnimations,
   className,
-  el: Wrapper = 'p',
   onAnimationComplete,
   once,
   repeatDelay,

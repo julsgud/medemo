@@ -1,5 +1,4 @@
 'use client';
-import { theme } from '../../theme';
 import { Section } from '../Section/Section';
 import { IntroSvg } from './IntroSvg';
 import { motion, useScroll, useTransform } from 'framer-motion';

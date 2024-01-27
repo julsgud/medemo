@@ -14,6 +14,10 @@ export const Section = forwardRef<HTMLDivElement, SectionProps & MotionProps>(
         {...props}
         className={`h-screen w-full ${className}`}
         ref={ref}
+        style={{
+          scrollSnapAlign: 'center',
+          ...props.style,
+        }}
       >
         {children}
       </motion.section>

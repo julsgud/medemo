@@ -52,7 +52,9 @@ const Home = () => {
     >
       <div
         style={{
+          overflow: 'auto',
           position: 'relative',
+          scrollSnapType: 'y mandatory',
           zIndex: 1,
         }}
       >

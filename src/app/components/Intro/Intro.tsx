@@ -2,7 +2,7 @@
 import { theme } from '../../theme';
 import { Section } from '../Section/Section';
 import { IntroSvg } from './IntroSvg';
-import { useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 
 const firstAnimationDuration = 1.5;
@@ -18,17 +18,8 @@ export const Intro = () => {
     target: targetRef,
   });
 
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
-
-  const { scrollYProgress: bottomColorScrollYProgress } = useScroll({
-    offset: [
-      [0.3, 0.3],
-      [0.75, 0],
-    ],
-    target: targetRef,
-  });
-
-  const scrollY = useTransform(bottomColorScrollYProgress, [0, 1], [0, 1]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
 
   return (
     <Section
@@ -37,7 +28,12 @@ export const Intro = () => {
         opacity,
       }}
     >
-      <div className="flex justify-center align-center h-full">
+      <motion.div
+        className="flex justify-center align-center h-full"
+        style={{
+          scale,
+        }}
+      >
         <IntroSvg
           animate={{
             opacity: 1,
@@ -57,7 +53,7 @@ export const Intro = () => {
             opacity,
           }}
         />
-      </div>
+      </motion.div>
     </Section>
   );
 };

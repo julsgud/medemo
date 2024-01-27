@@ -1,42 +1,18 @@
 'use client';
 import Silueta from '../../../../public/images/silueta.webp';
-import {
-  ANIMATIONS,
-  ELEMENTS_IN,
-  SCROLL_TRANSFORM,
-  TEXT_IN,
-  VARIANTS_IN,
-} from '../../constants';
+import { ANIMATIONS, ELEMENTS_IN, TEXT_IN, VARIANTS_IN } from '../../constants';
 import { AnimatedText } from '../AnimatedText/AnimatedText';
 import { Section } from '../Section/Section';
 import { Figures } from './Figures';
 import { Shapes } from './Shapes';
-import {
-  motion,
-  useAnimation,
-  useInView,
-  useScroll,
-  useTransform,
-} from 'framer-motion';
+import { motion, useAnimation, useInView } from 'framer-motion';
 import Image from 'next/image';
-import { type ReactNode, useRef } from 'react';
+import { useRef } from 'react';
 
 export const PasoUno = () => {
   const ref = useRef(null);
   const controls = useAnimation();
   const isInView = useInView(ref, { amount: 0.5, once: false });
-
-  const targetRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    offset: [[0.3, 0.2], 'center start'],
-    target: targetRef,
-  });
-
-  const opacity = useTransform(
-    scrollYProgress,
-    SCROLL_TRANSFORM.scrollY,
-    SCROLL_TRANSFORM.value,
-  );
 
   const startBodyAnimation = () => {
     if (isInView) {

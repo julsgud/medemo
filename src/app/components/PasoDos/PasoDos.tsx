@@ -9,7 +9,7 @@ import { useRef } from 'react';
 const animationDuration = 1.5;
 const spring = { stiffness: 100, type: 'spring' };
 
-export const PasoUno = () => {
+export const PasoDos = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, {
     amount: 0.9,

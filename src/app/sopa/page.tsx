@@ -41,6 +41,9 @@ const WordSearch: React.FC = () => {
     return { cols: rowsCols, rows: rowsCols };
   }, []);
 
+  // eslint-disable-next-line no-console
+  console.log('<<< grid size >>>', calculateGridSize, setGridSize);
+
   useEffect(() => {
     const initializeGrid = () => {
       const newGrid = Array.from({ length: gridSize.rows }, () =>

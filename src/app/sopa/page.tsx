@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-lonely-if */
 /* eslint-disable complexity */
 /* eslint-disable react/no-array-index-key */
@@ -37,11 +38,10 @@ const WordSearch: React.FC = () => {
     const maxWidth = Math.min(window.innerWidth, 600);
     const maxHeight = Math.min(window.innerHeight, 600);
     const size = Math.min(maxWidth, maxHeight);
-    const rowsCols = Math.floor(size / 44); // Ensure each box is at least 44px
+    const rowsCols = Math.floor(size / 40); // Ensure each box is at least 44px
     return { cols: rowsCols, rows: rowsCols };
   }, []);
 
-  // eslint-disable-next-line no-console
   console.log('<<< grid size >>>', calculateGridSize, setGridSize);
 
   useEffect(() => {
@@ -66,22 +66,16 @@ const WordSearch: React.FC = () => {
         while (!placed && attempts < 100) {
           attempts += 1;
 
-          let direction = Math.floor(Math.random() * 2); // 0 for horizontal, 1 for vertical
-
-          // If the limit for a direction is reached, force the remaining words to be placed in the other direction
-          if (horizontalCount >= 5) {
-            direction = 1;
-          } else if (verticalCount >= 5) {
-            direction = 0;
-          }
+          // Attempt to place words in the direction with fewer words
+          let direction = horizontalCount < verticalCount ? 0 : 1; // 0 for horizontal, 1 for vertical
 
           const row = Math.floor(
             Math.random() *
-              (gridSize.rows - (direction === 1 ? word.length : 0)),
+              (gridSize.rows - (direction === 1 ? word.length - 1 : 0)),
           );
           const col = Math.floor(
             Math.random() *
-              (gridSize.cols - (direction === 0 ? word.length : 0)),
+              (gridSize.cols - (direction === 0 ? word.length - 1 : 0)),
           );
           const length = word.length;
 
@@ -102,9 +96,30 @@ const WordSearch: React.FC = () => {
             }
           }
 
+          if (!canPlace && horizontalCount !== verticalCount) {
+            // If the word can't be placed in the direction with fewer words, try the other direction
+            direction = 1 - direction;
+            for (let index = 0; index < length; index++) {
+              if (direction === 0) {
+                // Horizontal placement
+                if (newGrid[row][col + index] !== '.') {
+                  canPlace = false;
+                  break;
+                }
+              } else {
+                // Vertical placement
+                if (newGrid[row + index]?.[col] !== '.') {
+                  canPlace = false;
+                  break;
+                }
+              }
+            }
+          }
+
           if (canPlace) {
             for (let index = 0; index < length; index++) {
               if (direction === 0) {
+                // Horizontal placement
                 newGrid[row][col + index] = word[index];
                 if (!localWordPositions[word]) {
                   localWordPositions[word] = [];
@@ -112,6 +127,7 @@ const WordSearch: React.FC = () => {
 
                 localWordPositions[word].push({ col: col + index, row });
               } else {
+                // Vertical placement
                 newGrid[row + index][col] = word[index];
                 if (!localWordPositions[word]) {
                   localWordPositions[word] = [];
@@ -157,7 +173,7 @@ const WordSearch: React.FC = () => {
 
       setGrid(newGrid);
       setPlacedWords(currentPlacedWords); // Set placedWords state variable to currentPlacedWords
-      setWordPositions(localWordPositions); // Set wordPositions state variable to localWordPositions
+      setWordPositions(localWordPositions); //
 
       const parameters = new URLSearchParams(window.location.search);
       setShowWords(parameters.get('show') === 'true');

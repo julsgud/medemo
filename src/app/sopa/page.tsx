@@ -130,18 +130,24 @@ const WordSearch: React.FC = () => {
   const [showWords, setShowWords] = useState(false);
   const [wordPositions, setWordPositions] = useState<WordPositions>({});
 
-  // Dynamically calculate grid size based on window size
   const calculateGridSize = useCallback(() => {
     const maxWidth = Math.min(window.innerWidth, 600);
     const maxHeight = Math.min(window.innerHeight, 600);
+    const longestWordLength = Math.max(...words.map((word) => word.length));
     const size = Math.min(maxWidth, maxHeight);
     const rowsCols = Math.floor(size / CELL_SIZE); // Ensure each box is at least 44px
-    return { cols: rowsCols, rows: rowsCols };
+    let cols = Math.max(rowsCols, longestWordLength);
+    const rows = Math.max(rowsCols, longestWordLength);
+
+    // Adjust cols if the total width of the grid would exceed the window width
+    cols = Math.min(cols, Math.floor(window.innerWidth / CELL_SIZE));
+
+    return { cols, rows };
   }, []);
 
   useEffect(() => {
-    const thisGridSize = calculateGridSize();
-    setGridSize(thisGridSize);
+    const calculatedGridSize = calculateGridSize();
+    setGridSize(calculatedGridSize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -157,10 +163,18 @@ const WordSearch: React.FC = () => {
       let horizontalCount = 0;
       let verticalCount = 0;
 
-      for (const untypedWord of words) {
-        const word = untypedWord as WordKeys;
+      // Sort words by length, descending
+      const sortedWords = [...words].sort((a, b) => b.length - a.length);
+
+      for (const word of sortedWords) {
         let placed = false;
         let attempts = 0;
+
+        if (word.length > gridSize.rows && word.length > gridSize.cols) {
+          throw new Error(
+            `The word "${word}" is too long to fit into the grid.`,
+          );
+        }
 
         while (!placed && attempts < 100) {
           attempts += 1;
@@ -183,13 +197,19 @@ const WordSearch: React.FC = () => {
           for (let index = 0; index < length; index++) {
             if (direction === 0) {
               // Horizontal placement
-              if (newGrid[row][col + index] !== '.') {
+              if (
+                newGrid[row][col + index] !== '.' &&
+                newGrid[row][col + index] !== word[index]
+              ) {
                 canPlace = false;
                 break;
               }
             } else {
               // Vertical placement
-              if (newGrid[row + index][col] !== '.') {
+              if (
+                newGrid[row + index][col] !== '.' &&
+                newGrid[row + index][col] !== word[index]
+              ) {
                 canPlace = false;
                 break;
               }
@@ -202,13 +222,19 @@ const WordSearch: React.FC = () => {
             for (let index = 0; index < length; index++) {
               if (direction === 0) {
                 // Horizontal placement
-                if (newGrid[row][col + index] !== '.') {
+                if (
+                  newGrid[row][col + index] !== '.' &&
+                  newGrid[row][col + index] !== word[index]
+                ) {
                   canPlace = false;
                   break;
                 }
               } else {
                 // Vertical placement
-                if (newGrid[row + index]?.[col] !== '.') {
+                if (
+                  newGrid[row + index]?.[col] !== '.' &&
+                  newGrid[row + index]?.[col] !== word[index]
+                ) {
                   canPlace = false;
                   break;
                 }
@@ -221,6 +247,7 @@ const WordSearch: React.FC = () => {
               if (direction === 0) {
                 // Horizontal placement
                 newGrid[row][col + index] = word[index];
+
                 if (!localWordPositions[word]) {
                   localWordPositions[word] = [];
                 }
@@ -233,6 +260,7 @@ const WordSearch: React.FC = () => {
               } else {
                 // Vertical placement
                 newGrid[row + index][col] = word[index];
+
                 if (!localWordPositions[word]) {
                   localWordPositions[word] = [];
                 }
@@ -322,6 +350,7 @@ const WordSearch: React.FC = () => {
       }
     }
   }, [grid, selectedCells, wordPositions]);
+
   const handleMouseUp = () => {
     checkSelection();
     setSelectedCells([]);

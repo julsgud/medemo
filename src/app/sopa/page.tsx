@@ -138,6 +138,8 @@ const adjustCellSize = (maxWidth: number) => {
 const WordSearch: React.FC = () => {
   const [cellSize, setCellSize] = useState(CELL_SIZE_MAX);
   const [grid, setGrid] = useState<string[][]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
   const [foundWords, setFoundWords] = useState<WordKeys[]>([]);
   const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -364,8 +366,11 @@ const WordSearch: React.FC = () => {
   }, [gridSize]);
 
   // Mouse and touch event handlers to track word selection
-  const handleMouseDown = (row: number, col: number) =>
-    setSelectedCells([{ col, row }]);
+  const handleMouseDown = (row: number, col: number) => {
+    setIsDragging(true);
+    return setSelectedCells([{ col, row }]);
+  };
+
   const handleMouseEnter = (row: number, col: number) => {
     if (selectedCells.length) {
       setSelectedCells((previous) => [...previous, { col, row }]);
@@ -377,6 +382,8 @@ const WordSearch: React.FC = () => {
     const selectedWord = selectedCells
       .map(({ col, row }) => grid[row]?.[col])
       .join('');
+
+    console.log('<<< selectedWord', selectedWord);
     if (words.includes(selectedWord as WordKeys)) {
       const positions = wordPositions[selectedWord as WordKeys];
       if (
@@ -395,9 +402,20 @@ const WordSearch: React.FC = () => {
   }, [grid, selectedCells, wordPositions]);
 
   const handleMouseUp = () => {
+    setIsDragging(false);
     checkSelection();
     setSelectedCells([]);
   };
+
+  const isCellSelected = useCallback(
+    (row: number, col: number) => {
+      return (
+        selectedCells.some((cell) => cell.row === row && cell.col === col) &&
+        isDragging
+      );
+    },
+    [isDragging, selectedCells],
+  );
 
   const cellBelongsToFoundWord = useCallback(
     (row: number, col: number) => {
@@ -486,6 +504,18 @@ const WordSearch: React.FC = () => {
   // console.log('<<< placed words >>>', placedWords);
   // console.log('<<< word positions >>>', wordPositions);
 
+  useEffect(() => {
+    // Attach the event handlers to the window object
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchend', handleMouseUp);
+
+    // Clean up the event handlers when the component unmounts
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [handleMouseUp]);
+
   return (
     <div className="flex justify-center items-center h-screen">
       <div
@@ -498,6 +528,7 @@ const WordSearch: React.FC = () => {
       >
         {grid.map((row, rowIndex) =>
           row.map((cell, cellIndex) => {
+            const isSelected = isCellSelected(rowIndex, cellIndex);
             return (
               <div
                 className="font-bold flex justify-center items-center select-none"
@@ -505,15 +536,17 @@ const WordSearch: React.FC = () => {
                 key={`${rowIndex}-${cellIndex}`}
                 onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
                 onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
-                onMouseUp={handleMouseUp}
-                onTouchEnd={handleMouseUp}
+                onTouchEnd={() => handleMouseUp}
                 onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
                 style={{
                   background: getColorForCell(rowIndex, cellIndex),
+                  color: isSelected ? 'orange' : 'black',
                   fontSize: `${cellSize * 0.9}px`,
                   lineHeight: `${cellSize}px`,
                   minHeight: `${cellSize}px`,
                   minWidth: `${cellSize}px`,
+                  transform: isSelected ? 'scale(1.1)' : 'none',
+                  transition: 'all 0.3s',
                   userSelect: 'none',
                 }}
               >

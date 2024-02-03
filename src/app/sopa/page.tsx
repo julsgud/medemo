@@ -137,7 +137,12 @@ const WordSearch: React.FC = () => {
     const size = Math.min(maxWidth, maxHeight);
     const rowsCols = Math.floor(size / CELL_SIZE); // Ensure each box is at least 44px
     let cols = Math.max(rowsCols, longestWordLength);
-    const rows = Math.max(rowsCols, longestWordLength);
+
+    // Calculate rows based on the height and cap it at 1.5x the longest word length
+    const rows = Math.min(
+      Math.floor(maxHeight / CELL_SIZE),
+      Math.floor(1.5 * longestWordLength),
+    );
 
     // Adjust cols if the total width of the grid would exceed the window width
     cols = Math.min(cols, Math.floor(window.innerWidth / CELL_SIZE));
@@ -180,7 +185,7 @@ const WordSearch: React.FC = () => {
           attempts += 1;
 
           // Attempt to place words in the direction with fewer words
-          let direction = horizontalCount < verticalCount ? 0 : 1; // 0 for horizontal, 1 for vertical
+          const direction = horizontalCount < verticalCount ? 0 : 1; // 0 for horizontal, 1 for vertical
 
           const row = Math.floor(
             Math.random() *
@@ -193,94 +198,103 @@ const WordSearch: React.FC = () => {
 
           const length = word.length;
 
-          let canPlace = true;
-          for (let index = 0; index < length; index++) {
-            if (direction === 0) {
-              // Horizontal placement
-              if (
-                newGrid[row][col + index] !== '.' &&
-                newGrid[row][col + index] !== word[index]
-              ) {
-                canPlace = false;
-                break;
-              }
-            } else {
-              // Vertical placement
-              if (
-                newGrid[row + index][col] !== '.' &&
-                newGrid[row + index][col] !== word[index]
-              ) {
-                canPlace = false;
-                break;
-              }
-            }
-          }
-
-          if (!canPlace && horizontalCount !== verticalCount) {
-            // If the word can't be placed in the direction with fewer words, try the other direction
-            direction = 1 - direction;
+          // Try to place the word at each character
+          for (let offset = 0; offset < length; offset++) {
+            let canPlace = true;
             for (let index = 0; index < length; index++) {
               if (direction === 0) {
                 // Horizontal placement
+                // Check if the current position is within the grid boundaries
                 if (
-                  newGrid[row][col + index] !== '.' &&
-                  newGrid[row][col + index] !== word[index]
+                  col + index - offset < 0 ||
+                  col + index - offset >= gridSize.cols
+                ) {
+                  canPlace = false;
+                  break;
+                }
+
+                // Check if the current cell is either empty or contains the same character as the current character of the word
+                if (
+                  newGrid[row][col + index - offset] !== '.' &&
+                  newGrid[row][col + index - offset] !== word[index]
                 ) {
                   canPlace = false;
                   break;
                 }
               } else {
                 // Vertical placement
+                // Check if the current position is within the grid boundaries
                 if (
-                  newGrid[row + index]?.[col] !== '.' &&
-                  newGrid[row + index]?.[col] !== word[index]
+                  row + index - offset < 0 ||
+                  row + index - offset >= gridSize.rows
+                ) {
+                  canPlace = false;
+                  break;
+                }
+
+                // Check if the current cell is either empty or contains the same character as the current character of the word
+                if (
+                  newGrid[row + index - offset][col] !== '.' &&
+                  newGrid[row + index - offset][col] !== word[index]
                 ) {
                   canPlace = false;
                   break;
                 }
               }
             }
-          }
 
-          if (canPlace) {
-            for (let index = 0; index < length; index++) {
-              if (direction === 0) {
-                // Horizontal placement
-                newGrid[row][col + index] = word[index];
+            if (canPlace) {
+              for (let index = 0; index < length; index++) {
+                if (direction === 0) {
+                  // Horizontal placement
+                  if (
+                    col + index - offset >= 0 &&
+                    col + index - offset < gridSize.cols
+                  ) {
+                    newGrid[row][col + index - offset] = word[index];
 
-                if (!localWordPositions[word]) {
-                  localWordPositions[word] = [];
+                    if (!localWordPositions[word]) {
+                      localWordPositions[word] = [];
+                    }
+
+                    localWordPositions[word]?.push({
+                      col: col + index - offset,
+                      direction: 'horizontal',
+                      row,
+                    });
+                  }
+                } else {
+                  if (
+                    row + index - offset >= 0 &&
+                    row + index - offset < gridSize.rows
+                  ) {
+                    // Vertical placement
+                    newGrid[row + index - offset][col] = word[index];
+
+                    if (!localWordPositions[word]) {
+                      localWordPositions[word] = [];
+                    }
+
+                    localWordPositions[word]?.push({
+                      col,
+                      direction: 'vertical',
+                      row: row + index - offset,
+                    });
+                  }
                 }
-
-                localWordPositions[word]?.push({
-                  col: col + index,
-                  direction: 'horizontal',
-                  row,
-                });
-              } else {
-                // Vertical placement
-                newGrid[row + index][col] = word[index];
-
-                if (!localWordPositions[word]) {
-                  localWordPositions[word] = [];
-                }
-
-                localWordPositions[word]?.push({
-                  col,
-                  direction: 'vertical',
-                  row: row + index,
-                });
               }
-            }
 
-            placed = true;
-            currentPlacedWords.push(word); // Add the word to the currentPlacedWords array
+              placed = true;
+              currentPlacedWords.push(word); // Add the word to the currentPlacedWords array
 
-            // Increment the count for the direction in which the word was placed
-            if (direction === 0) {
-              horizontalCount += 1;
-            } else {
-              verticalCount += 1;
+              // Increment the count for the direction in which the word was placed
+              if (direction === 0) {
+                horizontalCount += 1;
+              } else {
+                verticalCount += 1;
+              }
+
+              break;
             }
           }
         }
@@ -313,10 +327,17 @@ const WordSearch: React.FC = () => {
 
       const parameters = new URLSearchParams(window.location.search);
       setShowWords(parameters.get('show') === 'true');
+
+      return currentPlacedWords.length >= 0.8 * words.length;
     };
 
     if (gridSize.rows > 0 && gridSize.cols > 0) {
-      initializeGrid();
+      let attempts = 0;
+      let success = false;
+      while (!success && attempts < 100) {
+        success = initializeGrid();
+        attempts += 1;
+      }
     }
   }, [gridSize]);
 

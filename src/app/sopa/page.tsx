@@ -117,35 +117,57 @@ const getLinearGradient = (
   } 0%, ${wordsMap[word].colors.stop} 100%)`;
 };
 
-const CELL_SIZE = 44;
+const CELL_SIZE_MIN = 32;
+const CELL_SIZE_MAX = 44;
+
+const lerp = (v0: number, v1: number, ratio: number) => {
+  return v0 * (1 - ratio) + v1 * ratio;
+};
+
+const adjustCellSize = (maxWidth: number) => {
+  if (maxWidth <= 375) {
+    return CELL_SIZE_MIN;
+  } else if (maxWidth <= 600) {
+    const ratio = (maxWidth - 375) / (600 - 375);
+    return lerp(CELL_SIZE_MIN, CELL_SIZE_MAX, ratio);
+  } else {
+    return CELL_SIZE_MAX;
+  }
+};
 
 const WordSearch: React.FC = () => {
+  const [cellSize, setCellSize] = useState(CELL_SIZE_MAX);
   const [grid, setGrid] = useState<string[][]>([]);
+  const [foundWords, setFoundWords] = useState<WordKeys[]>([]);
+  const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [placedWords, setPlacedWords] = useState<string[]>([]);
+  const [showWords, setShowWords] = useState(false);
+  const [wordPositions, setWordPositions] = useState<WordPositions>({});
   const [selectedCells, setSelectedCells] = useState<
     Array<{ col: number; row: number }>
   >([]);
-  const [foundWords, setFoundWords] = useState<WordKeys[]>([]);
-  const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
-  const [placedWords, setPlacedWords] = useState<string[]>([]); // New state variable
-  const [showWords, setShowWords] = useState(false);
-  const [wordPositions, setWordPositions] = useState<WordPositions>({});
 
   const calculateGridSize = useCallback(() => {
     const maxWidth = Math.min(window.innerWidth, 600);
     const maxHeight = Math.min(window.innerHeight, 600);
+
+    const adjustedCellSize = adjustCellSize(maxWidth);
+    setCellSize(adjustedCellSize);
+
     const longestWordLength = Math.max(...words.map((word) => word.length));
     const size = Math.min(maxWidth, maxHeight);
-    const rowsCols = Math.floor(size / CELL_SIZE); // Ensure each box is at least 44px
+    const rowsCols = Math.floor(size / adjustedCellSize); // Ensure each box is at least 44px
     let cols = Math.max(rowsCols, longestWordLength);
 
     // Calculate rows based on the height and cap it at 1.5x the longest word length
     const rows = Math.min(
-      Math.floor(maxHeight / CELL_SIZE),
+      Math.floor(maxHeight / adjustedCellSize),
       Math.floor(1.5 * longestWordLength),
     );
 
     // Adjust cols if the total width of the grid would exceed the window width
-    cols = Math.min(cols, Math.floor(window.innerWidth / CELL_SIZE));
+    cols = Math.min(cols, Math.floor(window.innerWidth / adjustedCellSize));
 
     return { cols, rows };
   }, []);
@@ -469,9 +491,9 @@ const WordSearch: React.FC = () => {
       <div
         className="grid max-w-[600px] max-h-[600px] overflow-hidden"
         style={{
-          gridTemplateColumns: `repeat(${gridSize.cols}, minmax(${CELL_SIZE}px, 1fr))`,
-          height: `${Math.min(gridSize.rows * CELL_SIZE, 600)}px`,
-          width: `${Math.min(gridSize.cols * CELL_SIZE, 600)}px`,
+          gridTemplateColumns: `repeat(${gridSize.cols}, minmax(${cellSize}px, 1fr))`,
+          height: `${Math.min(gridSize.rows * cellSize, 600)}px`,
+          width: `${Math.min(gridSize.cols * cellSize, 600)}px`,
         }}
       >
         {grid.map((row, rowIndex) =>
@@ -479,6 +501,7 @@ const WordSearch: React.FC = () => {
             return (
               <div
                 className="font-bold flex justify-center items-center select-none"
+                id="cell"
                 key={`${rowIndex}-${cellIndex}`}
                 onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
                 onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
@@ -487,10 +510,11 @@ const WordSearch: React.FC = () => {
                 onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
                 style={{
                   background: getColorForCell(rowIndex, cellIndex),
-                  fontSize: `${CELL_SIZE * 0.9}px`,
-                  lineHeight: `${CELL_SIZE}px`,
-                  minHeight: `${CELL_SIZE}px`,
-                  minWidth: `${CELL_SIZE}px`,
+                  fontSize: `${cellSize * 0.9}px`,
+                  lineHeight: `${cellSize}px`,
+                  minHeight: `${cellSize}px`,
+                  minWidth: `${cellSize}px`,
+                  userSelect: 'none',
                 }}
               >
                 {cell.toUpperCase()}

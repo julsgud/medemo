@@ -7,42 +7,143 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 const words = [
-  'abril',
-  'amardeti',
   'camaymesa',
-  'himalaya',
-  'soñarte',
-  'luzazul',
   'actofinal',
+  'amardeti',
+  'himalaya',
   'espacial',
-  'quedate',
   'latregua',
   'sensible',
-];
+  'luzazul',
+  'soñarte',
+  'quedate',
+  'abril',
+] as const;
+
+type Word = {
+  colors: {
+    start: string;
+    stop: string;
+  };
+};
+
+type WordPosition = {
+  col: number;
+  direction: 'horizontal' | 'vertical';
+  row: number;
+};
+
+type WordPositions = {
+  [K in WordKeys]?: WordPosition[];
+};
+
+type WordKeys = (typeof words)[number];
+
+const wordsMap: Record<WordKeys, Word> = {
+  abril: {
+    colors: {
+      start: '#fcfbae',
+      stop: '#ffddd2',
+    },
+  },
+  actofinal: {
+    colors: {
+      start: '#f0c8ff',
+      stop: '#f594bd',
+    },
+  },
+  amardeti: {
+    colors: {
+      start: '#ffb59b',
+      stop: '#ffef97',
+    },
+  },
+  camaymesa: {
+    colors: {
+      start: '#e49cff',
+      stop: '#ffe0ed',
+    },
+  },
+  espacial: {
+    colors: {
+      start: '#f4f3a4',
+      stop: '#9eee9a',
+    },
+  },
+  himalaya: {
+    colors: {
+      start: '#6790e3',
+      stop: '#b2ecf9',
+    },
+  },
+  latregua: {
+    colors: {
+      start: '#4795e5',
+      stop: '#86e17c',
+    },
+  },
+  luzazul: {
+    colors: {
+      start: '#ffdda8',
+      stop: '#90d289',
+    },
+  },
+  quedate: {
+    colors: {
+      start: '#fcaecf',
+      stop: '#ffddd2',
+    },
+  },
+  sensible: {
+    colors: {
+      start: '#ff92c1',
+      stop: '#7ce1b5',
+    },
+  },
+  soñarte: {
+    colors: {
+      start: '#c5dee8',
+      stop: '#f39ac0',
+    },
+  },
+};
+
+const getLinearGradient = (
+  word: WordKeys,
+  direction: 'horizontal' | 'vertical' | undefined = 'horizontal',
+) => {
+  return `linear-gradient(${direction === 'horizontal' ? '0deg' : '90deg'}, ${
+    wordsMap[word].colors.start
+  } 0%, ${wordsMap[word].colors.stop} 100%)`;
+};
+
+const CELL_SIZE = 44;
 
 const WordSearch: React.FC = () => {
   const [grid, setGrid] = useState<string[][]>([]);
   const [selectedCells, setSelectedCells] = useState<
     Array<{ col: number; row: number }>
   >([]);
-  const [foundWords, setFoundWords] = useState<string[]>([]);
+  const [foundWords, setFoundWords] = useState<WordKeys[]>([]);
   const [gridSize, setGridSize] = useState({ cols: 10, rows: 10 });
   const [placedWords, setPlacedWords] = useState<string[]>([]); // New state variable
   const [showWords, setShowWords] = useState(false);
-  const [wordPositions, setWordPositions] = useState<{
-    [key: string]: Array<{ col: number; row: number }>;
-  }>({});
+  const [wordPositions, setWordPositions] = useState<WordPositions>({});
 
   // Dynamically calculate grid size based on window size
   const calculateGridSize = useCallback(() => {
     const maxWidth = Math.min(window.innerWidth, 600);
     const maxHeight = Math.min(window.innerHeight, 600);
     const size = Math.min(maxWidth, maxHeight);
-    const rowsCols = Math.floor(size / 40); // Ensure each box is at least 44px
+    const rowsCols = Math.floor(size / CELL_SIZE); // Ensure each box is at least 44px
     return { cols: rowsCols, rows: rowsCols };
   }, []);
 
-  console.log('<<< grid size >>>', calculateGridSize, setGridSize);
+  useEffect(() => {
+    const thisGridSize = calculateGridSize();
+    setGridSize(thisGridSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const initializeGrid = () => {
@@ -51,15 +152,13 @@ const WordSearch: React.FC = () => {
       );
 
       const currentPlacedWords = []; // Local variable to store placed words for this render
-      const localWordPositions: Record<
-        string,
-        Array<{ col: number; row: number }>
-      > = {}; // Create a local copy of wordPositions
+      const localWordPositions: WordPositions = {}; // Create a local copy of wordPositions
 
       let horizontalCount = 0;
       let verticalCount = 0;
 
-      for (const word of words) {
+      for (const untypedWord of words) {
+        const word = untypedWord as WordKeys;
         let placed = false;
         let attempts = 0;
 
@@ -77,6 +176,7 @@ const WordSearch: React.FC = () => {
             Math.random() *
               (gridSize.cols - (direction === 0 ? word.length - 1 : 0)),
           );
+
           const length = word.length;
 
           let canPlace = true;
@@ -125,7 +225,11 @@ const WordSearch: React.FC = () => {
                   localWordPositions[word] = [];
                 }
 
-                localWordPositions[word].push({ col: col + index, row });
+                localWordPositions[word]?.push({
+                  col: col + index,
+                  direction: 'horizontal',
+                  row,
+                });
               } else {
                 // Vertical placement
                 newGrid[row + index][col] = word[index];
@@ -133,7 +237,11 @@ const WordSearch: React.FC = () => {
                   localWordPositions[word] = [];
                 }
 
-                localWordPositions[word].push({ col, row: row + index });
+                localWordPositions[word]?.push({
+                  col,
+                  direction: 'vertical',
+                  row: row + index,
+                });
               }
             }
 
@@ -198,74 +306,147 @@ const WordSearch: React.FC = () => {
     const selectedWord = selectedCells
       .map(({ col, row }) => grid[row]?.[col])
       .join('');
-    if (words.includes(selectedWord)) {
-      const positions = wordPositions[selectedWord];
+    if (words.includes(selectedWord as WordKeys)) {
+      const positions = wordPositions[selectedWord as WordKeys];
       if (
-        positions.every((pos) =>
+        positions?.every((pos) =>
           selectedCells.some(
             (cell) => cell.row === pos.row && cell.col === pos.col,
           ),
         )
       ) {
-        setFoundWords((previousWords) => [...previousWords, selectedWord]);
+        setFoundWords((previousWords) => [
+          ...previousWords,
+          selectedWord as WordKeys,
+        ]);
       }
     }
   }, [grid, selectedCells, wordPositions]);
-
   const handleMouseUp = () => {
     checkSelection();
     setSelectedCells([]);
   };
 
-  console.log('<<< placed words >>>', placedWords);
-  console.log('<<< word positions >>>', wordPositions);
+  const cellBelongsToFoundWord = useCallback(
+    (row: number, col: number) => {
+      return foundWords.some(
+        (word) =>
+          wordPositions[word]?.some(
+            (pos) => pos.row === row && pos.col === col,
+          ),
+      );
+    },
+    [foundWords, wordPositions],
+  );
+
+  const foundWordForCell = useCallback(
+    (row: number, col: number) => {
+      return foundWords.find(
+        (word) =>
+          wordPositions[word]?.some(
+            (pos) => pos.row === row && pos.col === col,
+          ),
+      );
+    },
+    [foundWords, wordPositions],
+  );
+
+  const cellIsInWordPosition = useCallback(
+    (row: number, col: number) => {
+      return Object.values(wordPositions).some((positions) =>
+        positions.some((pos) => pos.row === row && pos.col === col),
+      );
+    },
+    [wordPositions],
+  );
+
+  const wordForCell = useCallback(
+    (row: number, col: number) => {
+      return Object.keys(wordPositions).find(
+        (word) =>
+          wordPositions[word as WordKeys]?.some(
+            (pos) => pos.row === row && pos.col === col,
+          ),
+      );
+    },
+    [wordPositions],
+  );
+
+  const getColorForCell = useCallback(
+    (rowIndex: number, cellIndex: number) => {
+      if (
+        cellBelongsToFoundWord(rowIndex, cellIndex) &&
+        foundWordForCell(rowIndex, cellIndex)
+      ) {
+        const foundWord = foundWordForCell(
+          rowIndex,
+          cellIndex,
+        ) as keyof typeof wordsMap;
+
+        const direction = wordPositions[foundWord]?.[0].direction;
+
+        return getLinearGradient(foundWord, direction);
+      }
+
+      if (showWords && cellIsInWordPosition(rowIndex, cellIndex)) {
+        const foundWord = wordForCell(
+          rowIndex,
+          cellIndex,
+        ) as keyof typeof wordsMap;
+
+        const direction = wordPositions[foundWord]?.[0].direction;
+
+        return getLinearGradient(foundWord, direction);
+      }
+
+      return 'white';
+    },
+    [
+      cellBelongsToFoundWord,
+      cellIsInWordPosition,
+      foundWordForCell,
+      showWords,
+      wordForCell,
+      wordPositions,
+    ],
+  );
+
+  // console.log('<<< placed words >>>', placedWords);
+  // console.log('<<< word positions >>>', wordPositions);
 
   return (
     <div className="flex justify-center items-center h-screen">
       <div
         className="grid max-w-[600px] max-h-[600px] overflow-hidden"
         style={{
-          gridTemplateColumns: `repeat(${gridSize.cols}, minmax(44px, 1fr))`,
-          height: `${Math.min(gridSize.rows * 44, 600)}px`,
-          width: `${Math.min(gridSize.cols * 44, 600)}px`,
+          gridTemplateColumns: `repeat(${gridSize.cols}, minmax(${CELL_SIZE}px, 1fr))`,
+          height: `${Math.min(gridSize.rows * CELL_SIZE, 600)}px`,
+          width: `${Math.min(gridSize.cols * CELL_SIZE, 600)}px`,
         }}
       >
         {grid.map((row, rowIndex) =>
-          row.map((cell, cellIndex) => (
-            <div
-              className={`text-4xl font-bold w-11 h-11 flex justify-center items-center select-none ${
-                (showWords &&
-                  placedWords.some(
-                    (word) =>
-                      wordPositions[word]?.some(
-                        (pos) => pos.row === rowIndex && pos.col === cellIndex,
-                      ),
-                  )) ||
-                foundWords.some(
-                  (word) =>
-                    wordPositions[word]?.some(
-                      (pos) => pos.row === rowIndex && pos.col === cellIndex,
-                    ),
-                )
-                  ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500'
-                  : 'bg-white'
-              }`}
-              key={`${rowIndex}-${cellIndex}`}
-              onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
-              onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
-              onMouseUp={handleMouseUp}
-              onTouchEnd={handleMouseUp}
-              onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
-              style={{
-                lineHeight: '44px',
-                minHeight: '44px',
-                minWidth: '44px',
-                userSelect: 'none',
-              }}
-            >
-              {cell.toUpperCase()}
-            </div>
-          )),
+          row.map((cell, cellIndex) => {
+            return (
+              <div
+                className="font-bold flex justify-center items-center select-none"
+                key={`${rowIndex}-${cellIndex}`}
+                onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
+                onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
+                onMouseUp={handleMouseUp}
+                onTouchEnd={handleMouseUp}
+                onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
+                style={{
+                  background: getColorForCell(rowIndex, cellIndex),
+                  fontSize: `${CELL_SIZE * 0.9}px`,
+                  lineHeight: `${CELL_SIZE}px`,
+                  minHeight: `${CELL_SIZE}px`,
+                  minWidth: `${CELL_SIZE}px`,
+                }}
+              >
+                {cell.toUpperCase()}
+              </div>
+            );
+          }),
         )}
       </div>
     </div>

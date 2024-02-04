@@ -517,12 +517,29 @@ const WordSearch: React.FC = () => {
   }, [handleMouseUp]);
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div
+      className="flex justify-center items-center h-screen"
+      style={{
+        background:
+          'radial-gradient(circle, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%)',
+      }}
+    >
+      <div className="flex flex-col">
+        {placedWords.map((word, index) => (
+          // eslint-disable-next-line react/jsx-key
+          <span>
+            <span>{index + 1}. </span>
+            <span>{word}</span>
+          </span>
+        ))}
+      </div>
       <div
         className="grid max-w-[600px] max-h-[600px] overflow-hidden"
         style={{
+          cursor: isDragging ? 'pointer' : 'default',
           gridTemplateColumns: `repeat(${gridSize.cols}, minmax(${cellSize}px, 1fr))`,
           height: `${Math.min(gridSize.rows * cellSize, 600)}px`,
+          userSelect: 'none',
           width: `${Math.min(gridSize.cols * cellSize, 600)}px`,
         }}
       >

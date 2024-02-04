@@ -81,6 +81,7 @@ font-display:auto;font-style:italic;font-weight:600;font-stretch:normal;
 }
 
 body {
+  overscroll-behavior: none;
   font-family: "chantal", sans-serif;
   color: rgb(var(--foreground-rgb));
   background: white;

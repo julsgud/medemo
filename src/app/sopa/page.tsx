@@ -513,6 +513,20 @@ const WordSearch: React.FC = () => {
     ],
   );
 
+  const handleTouchMove = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    if (element && element.id === 'cell') {
+      const row = Number(element.getAttribute('data-row'));
+      const col = Number(element.getAttribute('data-col'));
+
+      if (!selectedCells.some((cell) => cell.row === row && cell.col === col)) {
+        setSelectedCells((previous) => [...previous, { col, row }]);
+      }
+    }
+  };
+
   // console.log('<<< placed words >>>', placedWords);
   // console.log('<<< word positions >>>', wordPositions);
 
@@ -553,11 +567,14 @@ const WordSearch: React.FC = () => {
               return (
                 <div
                   className="font-bold flex justify-center items-center select-none"
+                  data-col={cellIndex}
+                  data-row={rowIndex}
                   id="cell"
                   key={`${rowIndex}-${cellIndex}`}
                   onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
                   onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
                   onTouchEnd={() => handleMouseUp}
+                  onTouchMove={handleTouchMove}
                   onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
                   style={{
                     background: getColorForCell(rowIndex, cellIndex),

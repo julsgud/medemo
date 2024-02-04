@@ -25,6 +25,7 @@ type Word = {
     start: string;
     stop: string;
   };
+  label: string;
 };
 
 type WordPosition = {
@@ -45,66 +46,77 @@ const wordsMap: Record<WordKeys, Word> = {
       start: '#fcfbae',
       stop: '#ffddd2',
     },
+    label: 'Abril',
   },
   actofinal: {
     colors: {
       start: '#f0c8ff',
       stop: '#f594bd',
     },
+    label: 'Acto Final',
   },
   amardeti: {
     colors: {
       start: '#ffb59b',
       stop: '#ffef97',
     },
+    label: 'Amar de Ti',
   },
   camaymesa: {
     colors: {
       start: '#e49cff',
       stop: '#ffe0ed',
     },
+    label: 'Cama y Mesa',
   },
   espacial: {
     colors: {
       start: '#f4f3a4',
       stop: '#9eee9a',
     },
+    label: 'Espacial',
   },
   himalaya: {
     colors: {
       start: '#6790e3',
       stop: '#b2ecf9',
     },
+    label: 'Himalaya',
   },
   latregua: {
     colors: {
       start: '#4795e5',
       stop: '#86e17c',
     },
+    label: 'La Tregua',
   },
   luzazul: {
     colors: {
       start: '#ffdda8',
       stop: '#90d289',
     },
+    label: 'Luz Azul',
   },
   quedate: {
     colors: {
       start: '#fcaecf',
       stop: '#ffddd2',
     },
+    label: 'Quédate',
   },
   sensible: {
     colors: {
       start: '#ff92c1',
       stop: '#7ce1b5',
     },
+    label: 'Sensible',
   },
   soñarte: {
     colors: {
       start: '#c5dee8',
       stop: '#f39ac0',
     },
+    label: 'Soñarte',
   },
 };
 
@@ -518,60 +530,68 @@ const WordSearch: React.FC = () => {
 
   return (
     <div
-      className="flex justify-center items-center h-screen"
+      className="flex justify-center items-center h-full"
       style={{
         background:
           'radial-gradient(circle, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%)',
       }}
     >
-      <div className="flex flex-col">
-        {placedWords.map((word, index) => (
-          // eslint-disable-next-line react/jsx-key
-          <span>
-            <span>{index + 1}. </span>
-            <span>{word}</span>
-          </span>
-        ))}
-      </div>
-      <div
-        className="grid max-w-[600px] max-h-[600px] overflow-hidden"
-        style={{
-          cursor: isDragging ? 'pointer' : 'default',
-          gridTemplateColumns: `repeat(${gridSize.cols}, minmax(${cellSize}px, 1fr))`,
-          height: `${Math.min(gridSize.rows * cellSize, 600)}px`,
-          userSelect: 'none',
-          width: `${Math.min(gridSize.cols * cellSize, 600)}px`,
-        }}
-      >
-        {grid.map((row, rowIndex) =>
-          row.map((cell, cellIndex) => {
-            const isSelected = isCellSelected(rowIndex, cellIndex);
-            return (
-              <div
-                className="font-bold flex justify-center items-center select-none"
-                id="cell"
-                key={`${rowIndex}-${cellIndex}`}
-                onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
-                onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
-                onTouchEnd={() => handleMouseUp}
-                onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
-                style={{
-                  background: getColorForCell(rowIndex, cellIndex),
-                  color: isSelected ? 'orange' : 'black',
-                  fontSize: `${cellSize * 0.9}px`,
-                  lineHeight: `${cellSize}px`,
-                  minHeight: `${cellSize}px`,
-                  minWidth: `${cellSize}px`,
-                  transform: isSelected ? 'scale(1.1)' : 'none',
-                  transition: 'all 0.3s',
-                  userSelect: 'none',
-                }}
-              >
-                {cell.toUpperCase()}
-              </div>
-            );
-          }),
-        )}
+      <div className="flex flex-col items-center mt-16">
+        <div
+          className="grid max-w-[600px] max-h-[600px] overflow-hidden"
+          style={{
+            cursor: isDragging ? 'pointer' : 'default',
+            gridTemplateColumns: `repeat(${gridSize.cols}, minmax(${cellSize}px, 1fr))`,
+            height: `${Math.min(gridSize.rows * cellSize, 600)}px`,
+            userSelect: 'none',
+            width: `${Math.min(gridSize.cols * cellSize, 600)}px`,
+          }}
+        >
+          {grid.map((row, rowIndex) =>
+            row.map((cell, cellIndex) => {
+              const isSelected = isCellSelected(rowIndex, cellIndex);
+              return (
+                <div
+                  className="font-bold flex justify-center items-center select-none"
+                  id="cell"
+                  key={`${rowIndex}-${cellIndex}`}
+                  onMouseDown={() => handleMouseDown(rowIndex, cellIndex)}
+                  onMouseEnter={() => handleMouseEnter(rowIndex, cellIndex)}
+                  onTouchEnd={() => handleMouseUp}
+                  onTouchStart={() => handleMouseDown(rowIndex, cellIndex)}
+                  style={{
+                    background: getColorForCell(rowIndex, cellIndex),
+                    color: isSelected ? 'orange' : 'black',
+                    fontSize: `${cellSize * 0.9}px`,
+                    lineHeight: `${cellSize}px`,
+                    minHeight: `${cellSize}px`,
+                    minWidth: `${cellSize}px`,
+                    transform: isSelected ? 'scale(1.1)' : 'none',
+                    transition: 'all 0.3s',
+                    userSelect: 'none',
+                  }}
+                >
+                  {cell.toUpperCase()}
+                </div>
+              );
+            }),
+          )}
+        </div>
+        <div className="flex flex-col max-w-[700px] mt-8 px-16">
+          <div className="text-3xl text-white grid sm:grid-cols-2 md:grid-cols-3 gap-4 items-center mb-4">
+            {placedWords.map((word, index) => {
+              const wordDetails = wordsMap[word as WordKeys];
+
+              return (
+                // eslint-disable-next-line react/jsx-key
+                <span className="mr-auto whitespace-nowrap">
+                  <span>{index + 1}. </span>
+                  <span>{wordDetails.label}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

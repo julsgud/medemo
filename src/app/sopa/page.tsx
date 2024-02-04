@@ -401,11 +401,11 @@ const WordSearch: React.FC = () => {
     }
   }, [grid, selectedCells, wordPositions]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     checkSelection();
     setSelectedCells([]);
-  };
+  }, [checkSelection]);
 
   const isCellSelected = useCallback(
     (row: number, col: number) => {
